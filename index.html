@@ -1,13 +1,169 @@
 <!doctype html>
 <html>
-  <head>
-    <title>COMP3322 Test Page</title>
-  </head>
-  <body>
-    <h1>Welcome Guys!</h1>
-    <p>Hello, I am Anthony and this is my course simple home page.</p>
-    <p>To access the course's Moodle site, please visit
-    <a href=
-       "http://moodle.hku.hk/course/view.php?id=71750">here</a>.</p>
-  </body>
-</html>
+<head>
+<meta charset="utf-8">
+<title>My Weather App</title>
+<style>
+  body {
+    background-color: whitesmoke;
+    font-family: "Space Grotesk", Arial, sans-serif;
+  }
+  #header {
+    border: 1px solid lavender;
+    border-radius: 1em;
+    background-color: white;
+  }
+  section {
+    margin: 1em 1em 1em 1.5em;
+  }
+  #show {
+  	display: flex;
+  	flex-wrap: wrap;
+  	justify-content: space-around;
+  }
+  #show > div {
+  	width: 8em;
+  	height: 8em;
+  	border-radius: 1em;
+  	margin: 0.5em;
+    padding: 0.5em;
+    background-color: lightblue;
+  }
+  div > p {
+  	text-align: center;
+    font-size: 1em;
+  }
+  p:first-of-type {
+  	margin-top: 32px;
+  }
+  .btn {
+  	display: inline-block;
+  	float: right;
+  	margin: 1px;
+  }
+  #title {
+    font-size: 2.5em;
+    width: 6em;
+    margin-bottom: 1em;
+  }
+  .winfo {
+    padding-right: 1em;
+  }
+  span {
+    font-size: 2em;
+  }
+</style>
+</head>
+<body>
+  <div id="header">
+    <section>
+      <div id="title">Weather in Hong Kong</div>
+    </section>
+  </div>
+  <div id="show"></div>
+  <script>
+
+    // get the geolocation - latitude and longitude
+    function getloc() {  
+      return new Promise((resolve, reject) => {
+        function success(position) {
+          let data = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          resolve(data);
+        }
+        function error() {
+          reject("Unable to retrieve your location");
+        }
+        navigator.geolocation.getCurrentPosition(success, error);
+      });
+    }
+    
+    // get the current district location
+    function getdistrict(pos) {
+      return fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pos.lat}&longitude=${pos.lng}&localityLanguage=en`,
+            {mode: 'cors'})
+      .then(response => response.json())
+      .catch(err => console.log(err));
+    }
+    
+    // get the weather data from Observatory
+  	async function getObData() {
+      return fetch("https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en", {mode: 'cors'})
+      .then(response => response.json())
+      .catch(err => console.log(err));
+    }
+    
+    async function main() {
+      let pos = await getloc();
+      //console.log(pos);
+      let addr = await getdistrict(pos);
+      //console.log(addr.locality);
+      let output = document.querySelector("section");
+      let Odata = await getObData();
+      let iconidx = Odata.icon[0];
+      let icon = document.createElement('img');
+      icon.src = 'https://rss.weather.gov.hk/img/pic'+iconidx+'.png';
+      icon.setAttribute('class', 'winfo');
+      output.append(icon);
+      let tempIcon = document.createElement('img');
+      tempIcon.src = 'thermometer-48.png';
+      output.append(tempIcon);
+      let tempdata = Odata.temperature.data[1].value;
+      let temp = document.createElement('span');
+      temp.setAttribute('class', 'winfo');
+      temp.innerHTML = tempdata+' <small>°C</small>';
+      output.append(temp);
+      let humidityIcon = document.createElement('img');
+      humidityIcon.src = 'drop-48.png';
+      output.append(humidityIcon);      
+      let humiditydata = Odata.humidity.data[0].value;
+      let humidity = document.createElement('span');
+      humidity.setAttribute('class', 'winfo');
+      humidity.innerHTML = humiditydata+'<small>%</small>';
+      output.append(humidity);
+      
+      let rainIcon = document.createElement('img');
+      rainIcon.src = 'rain-48.png';
+      output.append(rainIcon);
+      Odata.rainfall.data[0].place = 'central and western district';
+      for (place of Odata.rainfall.data) {
+        let district = place.place.toLowerCase();
+        if (!district.includes('district'))
+          district = district + ' district';
+        //console.log(district);
+        if (district == addr.locality.toLowerCase()) {
+          let raindata = place.max;
+          let rain = document.createElement('span');
+          rain.setAttribute('class', 'winfo');
+          rain.innerHTML = raindata+' <small>mm</small>';
+          output.append(rain);
+        }
+      }
+      
+      
+      let view = document.getElementById("show");
+      let item = 0;
+      for (loc of Odata.temperature.data) {
+      	let elm = document.createElement('div');
+        elm.id = 'blk'+item;
+        item++;
+        elm.innerHTML = `<img class='btn' src='cancel-24.ico'><p>${loc.place}</p> <p>${loc.value} °C</p>`;
+        view.append(elm);
+        btns = document.querySelectorAll('.btn');
+        for (let btn of btns) {
+          btn.addEventListener('click', (event) => {
+            let parent = event.target.parentNode;
+            parent.style.display = 'none';
+          });
+        }
+      }      
+    }
+
+    
+    main();
+
+  </script>
+</body>
+</html?
