@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Weather App</title>
 <style>
   body {
@@ -12,9 +13,7 @@
     border: 1px solid lavender;
     border-radius: 1em;
     background-color: white;
-  }
-  section {
-    margin: 1em 1em 1em 1.5em;
+    padding: 1em 1.5em 1em 1.5em;
   }
   #show {
   	display: flex;
@@ -41,25 +40,47 @@
   	float: right;
   	margin: 1px;
   }
-  #title {
-    font-size: 2.5em;
-    width: 6em;
-    margin-bottom: 1em;
-  }
   .winfo {
     padding-right: 1em;
   }
   span {
     font-size: 2em;
   }
+  #title {
+    font-size: 2.5em;
+    width: 6em;
+    display: inline-block;
+    margin: 0.5em 0 1em 0;
+  }
+  #area {
+    font-size: 1em;
+    margin-bottom: 1em;
+  }
+  @media only screen and (max-width: 480px) {
+    #title {
+      display: block;
+      margin: 0.5em 0 0.25em 0;
+    }
+    #icon {
+      display: block;
+      margin-bottom: 0.25em;
+    }
+    span {
+      font-size: 1.5em;
+    }
+    .winfo {
+      padding-right: 0.7em;
+    }
+    #area {
+      margin-top: 1.5em;
+      text-align: center;
+    }
+  }
+
 </style>
 </head>
 <body>
-  <div id="header">
-    <section>
-      <div id="title">Weather in Hong Kong</div>
-    </section>
-  </div>
+  <div id="header"></div>
   <div id="show"></div>
   <script>
 
@@ -96,52 +117,65 @@
     }
     
     async function main() {
-      let pos = await getloc();
-      //console.log(pos);
-      let addr = await getdistrict(pos);
-      //console.log(addr.locality);
-      let output = document.querySelector("section");
+      let pos = await getloc(); //wait for getting current geolocation
+      let addr = await getdistrict(pos); //wait for getting district info
+
+      let output = document.getElementById('header');
+      let title = document.createElement('div');
+      title.id = 'title';
+      title.innerHTML = 'Weather in Hong Kong';
+      output.append(title);
+      
+
+      
       let Odata = await getObData();
+      
       let iconidx = Odata.icon[0];
       let icon = document.createElement('img');
       icon.src = 'https://rss.weather.gov.hk/img/pic'+iconidx+'.png';
+      icon.id = 'icon';
       icon.setAttribute('class', 'winfo');
       output.append(icon);
+      
+      let tempBlk = document.createElement('span');
+      tempBlk.setAttribute('class', 'winfo');
       let tempIcon = document.createElement('img');
       tempIcon.src = 'thermometer-48.png';
-      output.append(tempIcon);
-      let tempdata = Odata.temperature.data[1].value;
-      let temp = document.createElement('span');
-      temp.setAttribute('class', 'winfo');
-      temp.innerHTML = tempdata+' <small>°C</small>';
-      output.append(temp);
-      let humidityIcon = document.createElement('img');
-      humidityIcon.src = 'drop-48.png';
-      output.append(humidityIcon);      
-      let humiditydata = Odata.humidity.data[0].value;
-      let humidity = document.createElement('span');
-      humidity.setAttribute('class', 'winfo');
-      humidity.innerHTML = humiditydata+'<small>%</small>';
-      output.append(humidity);
+      tempBlk.append(tempIcon);
+      let tempData = Odata.temperature.data[1].value;
+      tempBlk.innerHTML += tempData+' <small>°C</small>';
+      output.append(tempBlk);
       
+      let humBlk = document.createElement('span');
+      humBlk.setAttribute('class', 'winfo');
+      let humIcon = document.createElement('img');
+      humIcon.src = 'drop-48.png';
+      humBlk.append(humIcon);      
+      let humData = Odata.humidity.data[0].value;
+      humBlk.innerHTML += humData+'<small>%</small>';
+      output.append(humBlk);
+      
+      let rainBlk = document.createElement('span');
+      rainBlk.setAttribute('class', 'winfo');      
       let rainIcon = document.createElement('img');
       rainIcon.src = 'rain-48.png';
-      output.append(rainIcon);
+      rainBlk.append(rainIcon);
       Odata.rainfall.data[0].place = 'central and western district';
       for (place of Odata.rainfall.data) {
         let district = place.place.toLowerCase();
         if (!district.includes('district'))
           district = district + ' district';
-        //console.log(district);
         if (district == addr.locality.toLowerCase()) {
-          let raindata = place.max;
-          let rain = document.createElement('span');
-          rain.setAttribute('class', 'winfo');
-          rain.innerHTML = raindata+' <small>mm</small>';
-          output.append(rain);
+          let rainData = place.max;
+          rainBlk.innerHTML += rainData+' <small>mm</small>';
+          output.append(rainBlk);
         }
       }
-      
+
+      let area = document.createElement('div');
+      area.id = 'area';
+      area.innerHTML = 'District: '+addr.locality.slice(0,addr.locality.length-9);
+      output.append(area);      
       
       let view = document.getElementById("show");
       let item = 0;
