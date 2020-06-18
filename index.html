@@ -10,14 +10,14 @@
     font-family: "Space Grotesk", Arial, sans-serif;
   }
   #header {
-    width: 800px;
+    width: 750px;
     border: 1px solid lavender;
     border-radius: 1em;
     background-color: white;
     padding: 1em 1.5em 1em 1.5em;
   }
   #show {
-    width: 850px;
+    width: 800px;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
@@ -53,14 +53,18 @@
     margin: 0.5em 0 0.5em 0;
   }
   #district {
-    width: 800px;
+    width: 750px;
     font-size: 1em;
     font-weight: bold;
     padding: 1em;
   }
   @media only screen and (max-width: 800px) {
-    #header, #show, #district {
+    #show, #district {
       width: 100%;
+    }
+    #header {
+      padding: 1em 1.5em 1em 1.5em;
+      width: 90%;
     }
     #title {
       display: block;
@@ -263,7 +267,7 @@
     
     init();
     
-    window.setTimeout(mainloop, 15000);
+    //window.setTimeout(mainloop, 15000);
 
   </script>
 </body>
