@@ -9,15 +9,24 @@
     background-color: whitesmoke;
     font-family: "Space Grotesk", Arial, sans-serif;
   }
+  #container {
+    margin-left: auto;
+    margin-right: auto;
+    width: 800px;
+  }
   #header {
-    width: 750px;
     border: 1px solid lavender;
     border-radius: 1em;
     background-color: white;
     padding: 1em 1.5em 1em 1.5em;
+    position: relative;
+  }
+  #district {
+    font-size: 1em;
+    font-weight: bold;
+    padding: 1em;
   }
   #show {
-    width: 800px;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
@@ -28,7 +37,7 @@
     border-radius: 1em;
     margin: 0.5em;
     padding: 0.5em;
-    background-color: lightblue;
+    background-color: #AED6F1;
   }
   div > p {
     text-align: center;
@@ -52,19 +61,15 @@
     display: inline-block;
     margin: 0.5em 0 0.5em 0;
   }
-  #district {
-    width: 750px;
-    font-size: 1em;
-    font-weight: bold;
-    padding: 1em;
+  #reload {
+    position: absolute;
+    top: 0.3em;
+    right: 0.3em;
   }
+  
   @media only screen and (max-width: 800px) {
-    #show, #district {
+    #container {
       width: 100%;
-    }
-    #header {
-      padding: 1em 1.5em 1em 1.5em;
-      width: 90%;
     }
     #title {
       display: block;
@@ -87,9 +92,11 @@
 </style>
 </head>
 <body>
-  <div id="header"></div>
-  <div id="district"></div>
-  <div id="show"></div>
+  <div id="container">
+    <div id="header"></div>
+    <div id="district"></div>
+    <div id="show"></div>
+  </div>
   <script>
 
     // get the geolocation - latitude and longitude
@@ -203,71 +210,18 @@
       }
     }
     
-    async function mainloop() {
-      console.log("Mainloop");
-      let pos = await getloc(); //wait for getting current geolocation
-      let addr = await getdistrict(pos); //wait for getting district info
-      let Odata = await getObData(); //wait for weather data
-      
-      //update weather icon
-      let icon = document.getElementById('icon');
-      let iconidx = Odata.icon[0];
-      icon.src = 'https://rss.weather.gov.hk/img/pic'+iconidx+'.png';
-      
-      //update temperature info
-      let temp = document.getElementById('temp');
-      let tempData = Odata.temperature.data[1].value;
-      temp.innerText = tempData;
-      
-      //update humidity info
-      let humidity = document.getElementById('humidity');
-      let humData = Odata.humidity.data[0].value;
-      humidity.innerText = humData;
-      
-      //update rainfall info
-      Odata.rainfall.data[0].place = 'central and western district';
-      for (place of Odata.rainfall.data) {
-        let district = place.place.toLowerCase();
-        if (!district.includes('district'))
-          district = district + ' district';
-        if (district == addr.locality.toLowerCase()) {
-          let rainData = place.max;
-          let rain = document.getElementById('rain');
-          rain.innerText = rainData;
-        }
-      }
-      
-      //update district 
-      let area = document.getElementById('district');
-      area.innerText = 'District: '+addr.locality.slice(0,addr.locality.length-9);
-      
-      //update temperature data of different locations
-      //remove existing blocks first
-      let blocks = document.querySelectorAll('.block');
-      for (blk of blocks) {
-        blk.remove();
-      }
-      //show the temperature data 
-      let view = document.getElementById("show");
-      for (loc of Odata.temperature.data) {
-        let elm = document.createElement('div');
-        elm.setAttribute('class', 'block');
-        elm.innerHTML = "<img class='btn' src='cancel-24.ico'><p>" + loc.place + "</p> <p>" + loc.value + " °C</p>";
-        view.append(elm);
-      }
-      //add event handler to each cross button
-      btns = document.querySelectorAll('.btn');
-      for (let btn of btns) {
-        btn.addEventListener('click', (event) => {
-          let parent = event.target.parentNode;
-          parent.style.display = 'none';
-        });
-      }
-    }
-    
     init();
     
-    //window.setTimeout(mainloop, 15000);
+    let header = document.getElementById('header');
+    let reload = document.createElement('img');
+    reload.src = "reload-32.png";
+    reload.id = "reload";
+    header.prepend(reload);
+    
+    //add event handler to execute reload
+    reload.addEventListener('click', () => {
+      document.location.reload();
+    });
 
   </script>
 </body>
