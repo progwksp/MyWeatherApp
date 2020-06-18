@@ -10,53 +10,58 @@
     font-family: "Space Grotesk", Arial, sans-serif;
   }
   #header {
+    width: 800px;
     border: 1px solid lavender;
     border-radius: 1em;
     background-color: white;
     padding: 1em 1.5em 1em 1.5em;
   }
   #show {
-  	display: flex;
-  	flex-wrap: wrap;
-  	justify-content: space-around;
+    width: 850px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
   }
-  #show > div {
-  	width: 8em;
-  	height: 8em;
-  	border-radius: 1em;
-  	margin: 0.5em;
+  .block {
+    width: 8em;
+    height: 8em;
+    border-radius: 1em;
+    margin: 0.5em;
     padding: 0.5em;
     background-color: lightblue;
   }
   div > p {
-  	text-align: center;
+    text-align: center;
     font-size: 1em;
   }
   p:first-of-type {
-  	margin-top: 32px;
+    margin-top: 32px;
   }
   .btn {
-  	display: inline-block;
-  	float: right;
-  	margin: 1px;
+    display: inline-block;
+    float: right;
+    margin: 1px;
   }
   .winfo {
     padding-right: 1em;
-  }
-  span {
     font-size: 2em;
   }
   #title {
     font-size: 2.5em;
     width: 6em;
     display: inline-block;
-    margin: 0.5em 0 1em 0;
+    margin: 0.5em 0 0.5em 0;
   }
-  #area {
+  #district {
+    width: 800px;
     font-size: 1em;
-    margin-bottom: 1em;
+    font-weight: bold;
+    padding: 1em;
   }
-  @media only screen and (max-width: 480px) {
+  @media only screen and (max-width: 800px) {
+    #header, #show, #district {
+      width: 100%;
+    }
     #title {
       display: block;
       margin: 0.5em 0 0.25em 0;
@@ -65,15 +70,13 @@
       display: block;
       margin-bottom: 0.25em;
     }
-    span {
-      font-size: 1.5em;
-    }
     .winfo {
       padding-right: 0.7em;
+      font-size: 1.5em;
     }
-    #area {
-      margin-top: 1.5em;
+    #district {
       text-align: center;
+      padding: 0.6em;
     }
   }
 
@@ -81,6 +84,7 @@
 </head>
 <body>
   <div id="header"></div>
+  <div id="district"></div>
   <div id="show"></div>
   <script>
 
@@ -116,20 +120,21 @@
       .catch(err => console.log(err));
     }
     
-    async function main() {
+    async function init() {
       let pos = await getloc(); //wait for getting current geolocation
       let addr = await getdistrict(pos); //wait for getting district info
 
+      //display the header section
       let output = document.getElementById('header');
+      //display the title
       let title = document.createElement('div');
       title.id = 'title';
       title.innerHTML = 'Weather in Hong Kong';
       output.append(title);
+            
+      let Odata = await getObData(); //wait for weather data
       
-
-      
-      let Odata = await getObData();
-      
+      //display the weather icon
       let iconidx = Odata.icon[0];
       let icon = document.createElement('img');
       icon.src = 'https://rss.weather.gov.hk/img/pic'+iconidx+'.png';
@@ -137,29 +142,28 @@
       icon.setAttribute('class', 'winfo');
       output.append(icon);
       
+      //display the temperature info
       let tempBlk = document.createElement('span');
       tempBlk.setAttribute('class', 'winfo');
-      let tempIcon = document.createElement('img');
-      tempIcon.src = 'thermometer-48.png';
-      tempBlk.append(tempIcon);
+      let tempIcon = "<img src='thermometer-48.png'>";
       let tempData = Odata.temperature.data[1].value;
-      tempBlk.innerHTML += tempData+' <small>°C</small>';
+      tempBlk.innerHTML = tempIcon + "<span id='temp'>" + tempData + "</span> <small>°C</small>";
       output.append(tempBlk);
       
+      //display the humidity info
       let humBlk = document.createElement('span');
       humBlk.setAttribute('class', 'winfo');
-      let humIcon = document.createElement('img');
-      humIcon.src = 'drop-48.png';
-      humBlk.append(humIcon);      
+      let humIcon = "<img src='drop-48.png'>";
       let humData = Odata.humidity.data[0].value;
-      humBlk.innerHTML += humData+'<small>%</small>';
+      humBlk.innerHTML = humIcon + "<span id='humidity'>" + humData + "</span><small>%</small>";
       output.append(humBlk);
       
+      //display the rainfall info
       let rainBlk = document.createElement('span');
       rainBlk.setAttribute('class', 'winfo');      
-      let rainIcon = document.createElement('img');
-      rainIcon.src = 'rain-48.png';
-      rainBlk.append(rainIcon);
+      let rainIcon = "<img src='rain-48.png'>";
+      rainBlk.innerHTML = rainIcon + "<span id='rain'>0 </span><small>mm</small>";
+      output.append(rainBlk);      
       Odata.rainfall.data[0].place = 'central and western district';
       for (place of Odata.rainfall.data) {
         let district = place.place.toLowerCase();
@@ -167,37 +171,100 @@
           district = district + ' district';
         if (district == addr.locality.toLowerCase()) {
           let rainData = place.max;
-          rainBlk.innerHTML += rainData+' <small>mm</small>';
-          output.append(rainBlk);
+          let rain = document.getElementById('rain');
+          rain.innerText = rainData;
         }
       }
 
-      let area = document.createElement('div');
-      area.id = 'area';
-      area.innerHTML = 'District: '+addr.locality.slice(0,addr.locality.length-9);
-      output.append(area);      
+      //display the district info
+      let area = document.getElementById('district');
+      area.innerText = 'Current District: '+addr.locality.slice(0,addr.locality.length-9);     
       
+      //show the temperature data of different locations
       let view = document.getElementById("show");
-      let item = 0;
       for (loc of Odata.temperature.data) {
-      	let elm = document.createElement('div');
-        elm.id = 'blk'+item;
-        item++;
-        elm.innerHTML = `<img class='btn' src='cancel-24.ico'><p>${loc.place}</p> <p>${loc.value} °C</p>`;
+        let elm = document.createElement('div');
+        elm.setAttribute('class', 'block');
+        elm.innerHTML = "<img class='btn' src='cancel-24.ico'><p>" + loc.place + "</p> <p>" + loc.value + " °C</p>";
         view.append(elm);
-        btns = document.querySelectorAll('.btn');
-        for (let btn of btns) {
-          btn.addEventListener('click', (event) => {
-            let parent = event.target.parentNode;
-            parent.style.display = 'none';
-          });
-        }
-      }      
+      }
+      
+      //add event handler to each cross button
+      btns = document.querySelectorAll('.btn');
+      for (let btn of btns) {
+        btn.addEventListener('click', (event) => {
+          let parent = event.target.parentNode;
+          parent.style.display = 'none';
+        });
+      }
     }
-
     
-    main();
+    async function mainloop() {
+      console.log("Mainloop");
+      let pos = await getloc(); //wait for getting current geolocation
+      let addr = await getdistrict(pos); //wait for getting district info
+      let Odata = await getObData(); //wait for weather data
+      
+      //update weather icon
+      let icon = document.getElementById('icon');
+      let iconidx = Odata.icon[0];
+      icon.src = 'https://rss.weather.gov.hk/img/pic'+iconidx+'.png';
+      
+      //update temperature info
+      let temp = document.getElementById('temp');
+      let tempData = Odata.temperature.data[1].value;
+      temp.innerText = tempData;
+      
+      //update humidity info
+      let humidity = document.getElementById('humidity');
+      let humData = Odata.humidity.data[0].value;
+      humidity.innerText = humData;
+      
+      //update rainfall info
+      Odata.rainfall.data[0].place = 'central and western district';
+      for (place of Odata.rainfall.data) {
+        let district = place.place.toLowerCase();
+        if (!district.includes('district'))
+          district = district + ' district';
+        if (district == addr.locality.toLowerCase()) {
+          let rainData = place.max;
+          let rain = document.getElementById('rain');
+          rain.innerText = rainData;
+        }
+      }
+      
+      //update district 
+      let area = document.getElementById('district');
+      area.innerText = 'District: '+addr.locality.slice(0,addr.locality.length-9);
+      
+      //update temperature data of different locations
+      //remove existing blocks first
+      let blocks = document.querySelectorAll('.block');
+      for (blk of blocks) {
+        blk.remove();
+      }
+      //show the temperature data 
+      let view = document.getElementById("show");
+      for (loc of Odata.temperature.data) {
+        let elm = document.createElement('div');
+        elm.setAttribute('class', 'block');
+        elm.innerHTML = "<img class='btn' src='cancel-24.ico'><p>" + loc.place + "</p> <p>" + loc.value + " °C</p>";
+        view.append(elm);
+      }
+      //add event handler to each cross button
+      btns = document.querySelectorAll('.btn');
+      for (let btn of btns) {
+        btn.addEventListener('click', (event) => {
+          let parent = event.target.parentNode;
+          parent.style.display = 'none';
+        });
+      }
+    }
+    
+    init();
+    
+    //window.setTimeout(mainloop, 15000);
 
   </script>
 </body>
-</html?
+</html>
