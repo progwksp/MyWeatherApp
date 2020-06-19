@@ -1,2 +1,2 @@
 # WeatherApp
- Testing of weather app in github
+ A simple weather Web app for Hong Kong hosting in GitHub
