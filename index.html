@@ -129,7 +129,8 @@
     
     // get the weather data from Observatory
   	async function getObData() {
-      return fetch("https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en", {mode: 'cors'})
+      //return fetch("https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en", {mode: 'cors'})
+      return fetch("https://i7.cs.hku.hk/~atctam/c3322/WeatherData/getdata.php", {mode: 'cors'})
       .then(response => response.json());
     }
     
